@@ -1,3 +1,7 @@
 nodejs/
 ruby/
 rust/
+
+bin/benchmark_server
+bin/send_web_push
+bin/xsuportal
