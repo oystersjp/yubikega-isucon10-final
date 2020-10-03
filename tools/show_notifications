@@ -16,6 +16,7 @@ def db
     password: ENV['MYSQL_PASS'] || 'isucon',
     charset: 'utf8mb4',
     database_timezone: :utc,
+    interpolate_params: true,
     cast_booleans: true,
     symbolize_keys: true,
     reconnect: true,
