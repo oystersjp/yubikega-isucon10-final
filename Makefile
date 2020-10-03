@@ -4,19 +4,34 @@ gogo: stop-services build truncate-logs start-services
 
 build:
 	make -C golang
-	scp -C ~/webapp/golang/bin/benchmark_server isucon-app2:~/webapp/golang/bin/benchmark_server
-	scp -C ~/webapp/golang/bin/send_web_push isucon-app2:~/webapp/golang/bin/send_web_push
-	scp -C ~/webapp/golang/bin/xsuportal isucon-app2:~/webapp/golang/bin/xsuportal
-
-start-services:
-	ssh isucon-app2 sudo systemctl start xsuportal-api-golang.service
-	ssh isucon-app2 sudo systemctl start xsuportal-web-golang.service
 
 stop-services:
-	ssh isucon-app2 sudo systemctl stop xsuportal-api-golang.service
-	ssh isucon-app2 sudo systemctl stop xsuportal-web-golang.service
+	sudo systemctl stop envoy
+	#sudo systemctl stop nginx
+	#sudo systemctl stop mysql
+	ssh isucon-app2 sudo systemctl stop mysql
+	sudo systemctl stop xsuportal-web-golang.service
+	sudo systemctl stop xsuportal-api-golang.service
+
+start-services:
+	sudo systemctl start xsuportal-api-golang.service
+	sudo systemctl start xsuportal-web-golang.service
+	ssh isucon-app2 sudo systemctl start mysql
+	#sudo systemctl start mysql # app2がDB onlyになったら切り替え
+	sleep 5
+	#sudo systemctl start nginx
+	sudo systemctl start envoy
+
+status:
+	sudo systemctl status xsuportal-api-golang.service
+	sudo systemctl status xsuportal-web-golang.service
+	#sudo systemctl status mysql # app2がDB onlyになったら切り替え
+	ssh isucon-app2 sudo systemctl status mysql
+	#sudo systemctl status nginx
+	sudo systemctl status envoy
+
 
 truncate-logs:
-	ssh isucon-app2 sudo truncate --size 0 /var/log/mysql/mysql-slow.log
-	#sudo truncate --size 0 /var/log/nginx/access.log
+	ssh isucon-app2 sudo truncate --size 0 /var/log/mysql/mysql-slow.sql
+	sudo sudo truncate --size 0 /var/log/nginx/access.log
 
