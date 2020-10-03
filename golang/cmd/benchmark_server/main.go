@@ -35,15 +35,18 @@ func (b *benchmarkQueueService) Svc() *bench.BenchmarkQueueService {
 
 func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *bench.ReceiveBenchmarkJobRequest) (*bench.ReceiveBenchmarkJobResponse, error) {
 	var jobHandle *bench.ReceiveBenchmarkJobResponse_JobHandle
-	err := func() error {
-		job, err := fetchBenchmarkJob(db)
-		if err != nil {
-			return fmt.Errorf("poll benchmark job: %w", err)
-		}
-		if job == nil {
-			return nil
-		}
 
+	job, err := fetchBenchmarkJob(db)
+	if err != nil {
+		return nil, fmt.Errorf("poll benchmark job: %w", err)
+	}
+	if job == nil {
+		return &bench.ReceiveBenchmarkJobResponse{
+			JobHandle: jobHandle,
+		}, nil
+	}
+
+	err = func() error {
 		tx, err := db.Beginx()
 		if err != nil {
 			return fmt.Errorf("begin tx: %w", err)
@@ -102,9 +105,9 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 	if err != nil {
 		return nil, fmt.Errorf("fetch queue: %w", err)
 	}
-	if jobHandle != nil {
-		log.Printf("[DEBUG] Dequeued: job_handle=%+v", jobHandle)
-	}
+
+	log.Printf("[DEBUG] Dequeued: job_handle=%+v", jobHandle)
+
 	return &bench.ReceiveBenchmarkJobResponse{
 		JobHandle: jobHandle,
 	}, nil
