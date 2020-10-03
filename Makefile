@@ -7,14 +7,14 @@ build:
 
 stop-services:
 	sudo systemctl stop envoy
-	ssh isucon-app2 sudo systemctl stop mysql
 	sudo systemctl stop xsuportal-web-golang.service
 	sudo systemctl stop xsuportal-api-golang.service
+	ssh isucon-app2 sudo systemctl stop mysql
 
 start-services:
+	ssh isucon-app2 sudo systemctl start mysql
 	sudo systemctl start xsuportal-api-golang.service
 	sudo systemctl start xsuportal-web-golang.service
-	ssh isucon-app2 sudo systemctl start mysql
 	sleep 5
 	sudo systemctl start envoy
 
