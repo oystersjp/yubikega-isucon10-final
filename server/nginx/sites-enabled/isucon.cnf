@@ -2,10 +2,7 @@ server {
   listen 80;
   server_name default_server;
 
-  # TODO: SSLへredirect
-  location / {
-    proxy_pass http://127.0.0.1:9292;
-  }
+  return 443 http://127.0.0.1;
 }
 
 server {
@@ -13,7 +10,9 @@ server {
   server_name default_server;
 
   client_max_body_size 10m;
-
+  ssl on;
+  ssl_certificate /etc/ssl/private/tls-cert.pem;
+  ssl_certificate_key /etc/ssl/private/tls-key.pem;
   location ~ /xsuportal.proto.services.* {
     proxy_pass http://127.0.0.1:50051;
   }
@@ -22,3 +21,4 @@ server {
     proxy_pass http://127.0.0.1:9292; 
   }
 }
+
