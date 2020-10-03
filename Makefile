@@ -6,7 +6,7 @@ build:
 	make -C golang
 
 stop-services:
-	sudo systemctl stop envoy
+	sudo systemctl stop nginx
 	sudo systemctl stop xsuportal-web-golang.service
 	sudo systemctl stop xsuportal-api-golang.service
 	ssh isucon-app2 sudo systemctl stop mysql
@@ -16,13 +16,13 @@ start-services:
 	sudo systemctl start xsuportal-api-golang.service
 	sudo systemctl start xsuportal-web-golang.service
 	sleep 5
-	sudo systemctl start envoy
+	sudo systemctl start nginx
 
 status:
 	sudo systemctl status xsuportal-api-golang.service
 	sudo systemctl status xsuportal-web-golang.service
 	ssh isucon-app2 sudo systemctl status mysql
-	sudo systemctl status envoy
+	sudo systemctl status nginx
 
 
 truncate-logs:
