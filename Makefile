@@ -4,7 +4,7 @@ gogo: stop-services build truncate-logs start-services
 
 build:
 	make -C golang
-	scp -rC ~/webapp/golang/bin/ isucon-app2:~/webapp/golang/bin/ 
+	scp -rC ~/webapp/golang/bin isucon-app2:~/webapp/golang
 
 stop-services:
 	sudo systemctl stop nginx
