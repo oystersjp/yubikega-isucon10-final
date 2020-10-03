@@ -14,7 +14,9 @@ server {
   ssl_certificate /etc/ssl/private/tls-cert.pem;
   ssl_certificate_key /etc/ssl/private/tls-key.pem;
   location ~ /xsuportal.proto.services.* {
-    proxy_pass http://127.0.0.1:50051;
+    default_type application/vnd.google.protobuf;
+    # proxy_pass http://127.0.0.1:50051;
+    grpc_pass grpc://localhost:50051;
   }
 
   location / {
