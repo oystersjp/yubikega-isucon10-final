@@ -69,7 +69,7 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 			return fmt.Errorf("read random: %w", err)
 		}
 		handle := base64.StdEncoding.EncodeToString(randomBytes)
-		r, err = tx.Exec(
+		_, err = tx.Exec(
 			"UPDATE `benchmark_jobs` SET `status` = ?, `handle` = ? WHERE `id` = ? AND `status` = ? LIMIT 1",
 			resources.BenchmarkJob_SENT,
 			handle,
