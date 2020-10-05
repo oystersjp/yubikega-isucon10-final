@@ -591,12 +591,11 @@ func (*ContestantService) ListNotifications(e echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("select  push subscriptions: %w", err)
 	}
-	if &pushSubscription != nil {
+	if err != sql.ErrNoRows {
 		return writeProto(e, http.StatusOK, &contestantpb.ListNotificationsResponse{
 			Notifications: []*resourcespb.Notification{},
 		})
 	}
-	
 	var notifications []*xsuportal.Notification
 	if afterStr != "" {
 		after, err := strconv.Atoi(afterStr)
