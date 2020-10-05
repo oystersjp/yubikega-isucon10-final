@@ -31,6 +31,6 @@ status:
 
 
 truncate-logs:
-	ssh isucon-app3 sudo truncate --size 0 /var/log/mysql/mysql-slow.sql
+	ssh isucon-app3 sudo truncate --size 0 /var/log/mysql/mysql-slow.log
 	sudo sudo truncate --size 0 /var/log/nginx/access.log
 
