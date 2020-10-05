@@ -34,6 +34,10 @@ server {
   location ~* \.(?:ico|css|js|gif|jpe?g|png|eot|ttf|svg|woff|woff2)$ {
     root "/home/isucon/webapp/frontend/public";
     expires 2w;
+
+    gzip on;
+    gzip_types text/css text/javascript application/json application/javascript;
+    gzip_static always;
   }
 
   location /api/audience/dashboard {
