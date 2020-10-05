@@ -31,7 +31,7 @@ const (
 )
 
 func main() {
-	util.InitProfiler("benchmark_server")
+	util.InitProfiler("send_web_push")
 	util.InitTrace()
 	log.SetFlags(0)
 	log.SetPrefix("send_web_push: ")
