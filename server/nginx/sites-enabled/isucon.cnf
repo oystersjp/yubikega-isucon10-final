@@ -32,11 +32,11 @@ server {
   location /api/audience/dashboard {
       proxy_no_cache 0;
        add_header Cache-Control "maxage=1";
-      proxy_pass http://10.160.15.102:9292;
+      proxy_pass http://127.0.0.1:9292;
   }
   location /api/ {
       proxy_no_cache 1;
-      proxy_pass http://10.160.15.102:9292;
+      proxy_pass http://127.0.0.1:9292;
   }
   location / {	
     proxy_no_cache 1;

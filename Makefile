@@ -10,12 +10,16 @@ stop-services:
 	sudo systemctl stop nginx
 	ssh isucon-app2 sudo systemctl stop xsuportal-web-golang.service
 	ssh isucon-app2 sudo systemctl stop xsuportal-api-golang.service
+	sudo systemctl stop xsuportal-web-golang.service
+	sudo systemctl stop xsuportal-api-golang.service
 	ssh isucon-app3 sudo systemctl stop mysql
 
 start-services:
 	ssh isucon-app3 sudo systemctl start mysql
 	ssh isucon-app2 sudo systemctl start xsuportal-api-golang.service
 	ssh isucon-app2 sudo systemctl start xsuportal-web-golang.service
+	sudo systemctl start xsuportal-web-golang.service
+	sudo systemctl start xsuportal-api-golang.service
 	sleep 5
 	sudo systemctl start nginx
 
