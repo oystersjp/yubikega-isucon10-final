@@ -579,21 +579,22 @@ func (*ContestantService) ListNotifications(e echo.Context) error {
 		return fmt.Errorf("begin tx: %w", err)
 	}
 	defer tx.Rollback()
-	contestant, _ := getCurrentContestant(e, tx, false)
 
-	var pushSubscription xsuportal.PushSubscription
+	var pushSubscriptions []*xsuportal.PushSubscription
+	contestant, _ := getCurrentContestant(e, tx, false)
 	err = sqlx.Select(
 		db,
-		&pushSubscription,
+		&pushSubscriptions,
 		"SELECT * FROM `push_subscriptions` WHERE `contestant_id` = ? LIMIT 1",
 		contestant.ID,
 	)
 	if err != nil {
-		return fmt.Errorf("select  push subscriptions: %w", err)
+		return fmt.Errorf("select push subscriptions: %w", err)
 	}
 	if err != sql.ErrNoRows {
 		return writeProto(e, http.StatusOK, &contestantpb.ListNotificationsResponse{
 			Notifications: []*resourcespb.Notification{},
+			//			LastAnsweredClarificationId: lastAnsweredClarificationID,
 		})
 	}
 	var notifications []*xsuportal.Notification
