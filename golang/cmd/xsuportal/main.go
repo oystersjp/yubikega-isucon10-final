@@ -48,6 +48,8 @@ var db *sqlx.DB
 var notifier xsuportal.Notifier
 
 func main() {
+	util.InitProfiler("send_web_push")
+	util.InitTrace()
 	srv := echo.New()
 	srv.Debug = util.GetEnv("DEBUG", "") != ""
 	srv.Server.Addr = fmt.Sprintf(":%v", util.GetEnv("PORT", "9292"))

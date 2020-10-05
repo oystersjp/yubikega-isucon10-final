@@ -20,5 +20,5 @@ func GetDB() (*sqlx.DB, error) {
 	mysqlConfig.ParseTime = true
 	mysqlConfig.InterpolateParams = true
 
-	return sqlx.Open("mysql", mysqlConfig.FormatDSN())
+	return sqlx.Open(util.TracedDriver("mysql"), mysqlConfig.FormatDSN())
 }

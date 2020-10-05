@@ -253,6 +253,8 @@ func fetchBenchmarkJob(db sqlx.Queryer) (*xsuportal.BenchmarkJob, error) {
 }
 
 func main() {
+	util.InitProfiler("send_web_push")
+	util.InitTrace()
 	port := util.GetEnv("PORT", "50051")
 	address := ":" + port
 

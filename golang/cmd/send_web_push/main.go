@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
+	"github.com/isucon/isucon10-final/webapp/golang/util"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -30,6 +31,8 @@ const (
 )
 
 func main() {
+	util.InitProfiler("benchmark_server")
+	util.InitTrace()
 	log.SetFlags(0)
 	log.SetPrefix("send_web_push: ")
 	if err := run(); err != nil {
