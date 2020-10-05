@@ -581,6 +581,22 @@ func (*ContestantService) ListNotifications(e echo.Context) error {
 	defer tx.Rollback()
 	contestant, _ := getCurrentContestant(e, tx, false)
 
+	var pushSubscription xsuportal.PushSubscription
+	err = sqlx.Select(
+		db,
+		&pushSubscription,
+		"SELECT * FROM `push_subscriptions` WHERE `contestant_id` = ? LIMIT 1",
+		contestant.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("select  push subscriptions: %w", err)
+	}
+	if &pushSubscription != nil {
+		return writeProto(e, http.StatusOK, &contestantpb.ListNotificationsResponse{
+			Notifications: []*resourcespb.Notification{},
+		})
+	}
+	
 	var notifications []*xsuportal.Notification
 	if afterStr != "" {
 		after, err := strconv.Atoi(afterStr)
