@@ -31,6 +31,7 @@ server {
   proxy_cache_valid 200 1s;
   location /api/audience/dashboard {
       proxy_no_cache 0;
+       add_header Cache-Control "maxage=1";
       proxy_pass http://10.160.15.102:9292;
   }
   location /api/ {
