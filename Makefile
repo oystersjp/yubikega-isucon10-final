@@ -3,7 +3,7 @@
 gogo: stop-services build truncate-logs start-services
 
 build:
-	make -C golang
+	cd golang && make all
 	scp -rC ~/webapp/golang/bin isucon-app2:~/webapp/golang
 
 stop-services:
