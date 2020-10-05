@@ -573,8 +573,6 @@ func (*ContestantService) ListNotifications(e echo.Context) error {
 
 	afterStr := e.QueryParam("after")
 
-	time.Sleep(time.Second * 1)
-
 	tx, err := db.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
