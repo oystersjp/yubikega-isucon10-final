@@ -177,6 +177,9 @@ func run() error {
 	}
 	defer db.Close()
 
+	db.SetMaxOpenConns(50)
+	db.SetMaxIdleConns(50)
+
 	subscriptions, err := GetPushSubscriptions(db, flags.contestantID)
 	if err != nil {
 		return fmt.Errorf("get push subscrptions: %w", err)
