@@ -244,7 +244,7 @@ func (*AdminService) ListClarifications(e echo.Context) error {
 		}
 	}
 	for _, clarification := range clarifications {
-		team, ok := teams[clarification.ID]
+		team, ok := teams[clarification.TeamID]
 		if !ok {
 			return fmt.Errorf("query team(id=%v, clarification=%v): %w", clarification.TeamID, clarification.ID, ok)
 		}
