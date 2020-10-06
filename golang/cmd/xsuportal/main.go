@@ -219,7 +219,7 @@ func (*AdminService) ListClarifications(e echo.Context) error {
 	}
 	var teams map[int64]xsuportal.Team
 	if len(itemIds) > 0 {
-		query, args, err := sqlx.In("SELECT * FROM `teams` WHERE `id` IN (?) LIMIT 1", itemIds)
+		query, args, err := sqlx.In("SELECT * FROM `teams` WHERE `id` IN (?)", itemIds)
 		if err != nil {
 			return fmt.Errorf("query %w", err)
 
