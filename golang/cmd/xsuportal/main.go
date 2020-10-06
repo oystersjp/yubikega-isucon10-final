@@ -213,35 +213,9 @@ func (*AdminService) ListClarifications(e echo.Context) error {
 	}
 	res := &adminpb.ListClarificationsResponse{}
 
-	var itemIds []interface{}
-	for _, i := range clarifications {
-		itemIds = append(itemIds, i.TeamID)
-	}
-	var teams map[int64]xsuportal.Team
-	if len(itemIds) > 0 {
-		query, args, err := sqlx.In("SELECT * FROM `teams` WHERE `id` IN (?)", itemIds)
-		if err != nil {
-			return fmt.Errorf("query %w", err)
-
-		}
-		var s []xsuportal.Team
-		err = db.Select(&s, query, args...)
-		if err != nil {
-			return fmt.Errorf("query %w", err)
-		}
-		teams = make(map[int64]xsuportal.Team, len(s))
-		for _, u := range s {
-			teams[u.ID] = xsuportal.Team{
-				ID:           u.ID,
-				Name:         u.Name,
-				LeaderID:     u.LeaderID,
-				EmailAddress: u.EmailAddress,
-				InviteToken:  u.InviteToken,
-				Withdrawn:    u.Withdrawn,
-				CreatedAt:    u.CreatedAt,
-				Student:      u.Student,
-			}
-		}
+	teams, err2 := getTeams(clarifications)
+	if err2 != nil {
+		return err2
 	}
 	for _, clarification := range clarifications {
 		team, ok := teams[clarification.TeamID]
@@ -256,6 +230,40 @@ func (*AdminService) ListClarifications(e echo.Context) error {
 		res.Clarifications = append(res.Clarifications, c)
 	}
 	return writeProto(e, http.StatusOK, res)
+}
+
+func getTeams(clarifications []xsuportal.Clarification) (map[int64]xsuportal.Team, error) {
+	var itemIds []interface{}
+	for _, i := range clarifications {
+		itemIds = append(itemIds, i.TeamID)
+	}
+	var teams map[int64]xsuportal.Team
+	if len(itemIds) > 0 {
+		query, args, err := sqlx.In("SELECT * FROM `teams` WHERE `id` IN (?)", itemIds)
+		if err != nil {
+			return nil, fmt.Errorf("query %w", err)
+
+		}
+		var ts []xsuportal.Team
+		err = db.Select(&ts, query, args...)
+		if err != nil {
+			return nil, fmt.Errorf("query %w", err)
+		}
+		teams = make(map[int64]xsuportal.Team, len(ts))
+		for _, t := range ts {
+			teams[t.ID] = xsuportal.Team{
+				ID:           t.ID,
+				Name:         t.Name,
+				LeaderID:     t.LeaderID,
+				EmailAddress: t.EmailAddress,
+				InviteToken:  t.InviteToken,
+				Withdrawn:    t.Withdrawn,
+				CreatedAt:    t.CreatedAt,
+				Student:      t.Student,
+			}
+		}
+	}
+	return teams, nil
 }
 
 func (*AdminService) GetClarification(e echo.Context) error {
@@ -522,14 +530,16 @@ func (*ContestantService) ListClarifications(e echo.Context) error {
 		return fmt.Errorf("select clarifications: %w", err)
 	}
 	res := &contestantpb.ListClarificationsResponse{}
+
+	teams, err := getTeams(clarifications)
+	if err != sql.ErrNoRows && err != nil {
+		return fmt.Errorf("select clarifications: %w", err)
+	}
+
 	for _, clarification := range clarifications {
-		var team xsuportal.Team
-		err := db.Get(
-			&team,
-			"SELECT * FROM `teams` WHERE `id` = ? LIMIT 1",
-			clarification.TeamID,
-		)
-		if err != nil {
+		team, ok := teams[clarification.TeamID]
+
+		if !ok {
 			return fmt.Errorf("get team(id=%v): %w", clarification.TeamID, err)
 		}
 		c, err := makeClarificationPB(db, &clarification, &team)
