@@ -212,16 +212,43 @@ func (*AdminService) ListClarifications(e echo.Context) error {
 		return fmt.Errorf("query clarifications: %w", err)
 	}
 	res := &adminpb.ListClarificationsResponse{}
-	for _, clarification := range clarifications {
-		var team xsuportal.Team
-		err := db.Get(
-			&team,
-			"SELECT * FROM `teams` WHERE `id` = ? LIMIT 1",
-			clarification.TeamID,
-		)
+
+	var itemIds []interface{}
+	for _, i := range clarifications {
+		itemIds = append(itemIds, i.ID)
+	}
+	var teams map[int64]xsuportal.Team
+	if len(itemIds) > 0 {
+		query, args, err := sqlx.In("SELECT * FROM `teams` WHERE `id` IN (?) LIMIT 1", itemIds)
 		if err != nil {
-			return fmt.Errorf("query team(id=%v, clarification=%v): %w", clarification.TeamID, clarification.ID, err)
+			return fmt.Errorf("query %w", err)
+
 		}
+		var s []xsuportal.Team
+		err = db.Select(&s, query, args...)
+		if err != nil {
+			return fmt.Errorf("query %w", err)
+		}
+		teams = make(map[int64]xsuportal.Team, len(s))
+		for _, u := range s {
+			teams[u.ID] = xsuportal.Team{
+				ID:           u.ID,
+				Name:         u.Name,
+				LeaderID:     u.LeaderID,
+				EmailAddress: u.EmailAddress,
+				InviteToken:  u.InviteToken,
+				Withdrawn:    u.Withdrawn,
+				CreatedAt:    u.CreatedAt,
+				Student:      u.Student,
+			}
+		}
+	}
+	for _, clarification := range clarifications {
+		team, ok := teams[clarification.ID]
+		if !ok {
+			return fmt.Errorf("query team(id=%v, clarification=%v): %w", clarification.TeamID, clarification.ID, ok)
+		}
+
 		c, err := makeClarificationPB(db, &clarification, &team)
 		if err != nil {
 			return fmt.Errorf("make clarification: %w", err)
