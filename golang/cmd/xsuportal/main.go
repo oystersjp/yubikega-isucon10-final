@@ -215,7 +215,7 @@ func (*AdminService) ListClarifications(e echo.Context) error {
 
 	var itemIds []interface{}
 	for _, i := range clarifications {
-		itemIds = append(itemIds, i.ID)
+		itemIds = append(itemIds, i.TeamID)
 	}
 	var teams map[int64]xsuportal.Team
 	if len(itemIds) > 0 {
