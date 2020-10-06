@@ -594,7 +594,6 @@ func (*ContestantService) ListNotifications(e echo.Context) error {
 	if err != sql.ErrNoRows {
 		return writeProto(e, http.StatusOK, &contestantpb.ListNotificationsResponse{
 			Notifications: []*resourcespb.Notification{},
-			//			LastAnsweredClarificationId: lastAnsweredClarificationID,
 		})
 	}
 	var notifications []*xsuportal.Notification
