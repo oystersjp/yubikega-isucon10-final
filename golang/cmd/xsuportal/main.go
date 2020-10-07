@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -470,6 +471,15 @@ func (*ContestantService) EnqueueBenchmarkJob(e echo.Context) error {
 		return fmt.Errorf("commit tx: %w", err)
 	}
 	j := makeBenchmarkJobPB(&job)
+
+	urlTarget := "http://127.0.0.1:50052/api/contestant/benchmark_jobs"
+	args := url.Values{}
+	res, err := http.PostForm(urlTarget, args)
+	defer res.Body.Close()
+	if err != nil {
+		return fmt.Errorf("pass job id to benchmark: %w", err)
+	}
+
 	return writeProto(e, http.StatusOK, &contestantpb.EnqueueBenchmarkJobResponse{
 		Job: j,
 	})
@@ -668,6 +678,7 @@ func (*ContestantService) ListNotifications(e echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("make notifications: %w", err)
 	}
+
 	return writeProto(e, http.StatusOK, &contestantpb.ListNotificationsResponse{
 		Notifications:               ns,
 		LastAnsweredClarificationId: lastAnsweredClarificationID,

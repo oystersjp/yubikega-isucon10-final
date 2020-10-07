@@ -6,8 +6,10 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"log"
 	"net"
+	"net/http"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -27,6 +29,8 @@ var db *sqlx.DB
 type benchmarkQueueService struct {
 }
 
+var benchmarkJobIdChannel chan (int64)
+
 func (b *benchmarkQueueService) Svc() *bench.BenchmarkQueueService {
 	return &bench.BenchmarkQueueService{
 		ReceiveBenchmarkJob: b.ReceiveBenchmarkJob,
@@ -39,7 +43,7 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 
 	err := func() error {
 		for {
-			j, err := fetchBenchmarkJob(db)
+			j, err := pollBenchmarkJob(db)
 			if err != nil {
 				return fmt.Errorf("poll benchmark job: %w", err)
 			}
@@ -234,6 +238,15 @@ func (b *benchmarkReportService) saveAsRunning(db sqlx.Execer, job *xsuportal.Be
 	return nil
 }
 
+func pollBenchmarkJob(db sqlx.Queryer) (*xsuportal.BenchmarkJob, error) {
+	select {
+	case _ = <-benchmarkJobIdChannel:
+		return fetchBenchmarkJob(db)
+	case <-time.After(200 * time.Millisecond):
+		return nil, nil
+	}
+}
+
 func fetchBenchmarkJob(db sqlx.Queryer) (*xsuportal.BenchmarkJob, error) {
 	var job xsuportal.BenchmarkJob
 	err := sqlx.Get(
@@ -251,7 +264,10 @@ func fetchBenchmarkJob(db sqlx.Queryer) (*xsuportal.BenchmarkJob, error) {
 
 	return &job, nil
 }
-
+func enqueueBenchmarkJob(e echo.Context) error {
+	benchmarkJobIdChannel <- 50
+	return e.JSON(http.StatusOK, nil)
+}
 func main() {
 	port := util.GetEnv("PORT", "50051")
 	address := ":" + port
@@ -261,6 +277,13 @@ func main() {
 		panic(err)
 	}
 	log.Print("[INFO] listen ", address)
+
+	benchmarkJobIdChannel = make(chan int64, 1000)
+	srv := echo.New()
+	srv.POST("/api/contestant/benchmark_jobs", enqueueBenchmarkJob)
+	go func() {
+		srv.Start(":50052")
+	}()
 
 	db, _ = xsuportal.GetDB()
 	db.SetMaxOpenConns(50)
