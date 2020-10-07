@@ -5,6 +5,12 @@ server {
   return 443 http://127.0.0.1;
 }
 
+upstream app_and_web {
+  server isu3.t.isucon.dev:9292;
+
+  keepalive 32;
+}
+
 server {
   listen 443 ssl http2;
   server_name default_server;
@@ -20,6 +26,8 @@ server {
   proxy_set_header X-Forwarded-Host   $host;
   proxy_set_header X-Forwarded-Server $host;
   proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
+  proxy_http_version 1.1;
+  proxy_set_header Connection "";
 
   proxy_ignore_headers Cache-Control;
   proxy_cache zone1;
@@ -38,21 +46,22 @@ server {
 
   location ~ /xsuportal.proto.services.* {
     default_type application/vnd.google.protobuf;
+    grpc_socket_keepalive on;
     grpc_pass grpc://isu3.t.isucon.dev:50051;
   }
 
   location /api/audience/dashboard {
       proxy_no_cache 0;
       add_header Cache-Control "maxage=1";
-      proxy_pass http://isu3.t.isucon.dev:9292;
+      proxy_pass http://app_and_web;
   }
   location /api/ {
       proxy_no_cache 1;
-      proxy_pass http://isu3.t.isucon.dev:9292;
+      proxy_pass http://app_and_web;
   }
   location / {	
     proxy_no_cache 1;
-    proxy_pass http://isu3.t.isucon.dev:9292;
+    proxy_pass http://app_and_web;
   }
 }
 
