@@ -125,8 +125,6 @@ func main() {
 	srv.POST("/api/login", contestant.Login)
 	srv.POST("/api/logout", contestant.Logout)
 
-	srv.Logger.Error(srv.StartServer(srv.Server))
-
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "10.160.15.101:6379", // use default Addr
 		Password: "",                   // no password set
@@ -134,6 +132,8 @@ func main() {
 
 	pong, err := rdb.Ping(ctx).Result()
 	fmt.Println(pong, err)
+
+	srv.Logger.Error(srv.StartServer(srv.Server))
 
 }
 
