@@ -75,6 +75,12 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 			}
 			rdb.LPop(ctx, "job_list")
 			var contestStartsAt time.Time
+			timeString := rdb.Get(ctx, "contest_starts_at")
+			if timeString != nil {
+				continue
+			}
+			contestStartsAt, _ = time.Parse(timeString.Val(),"2014-12-31 12:31:24 JST")
+
 			err = db.Get(&contestStartsAt, "SELECT `contest_starts_at` FROM `contest_config` LIMIT 1")
 			if err != nil {
 				return fmt.Errorf("get contest starts at: %w", err)
@@ -99,6 +105,8 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 			resources.BenchmarkJob_PENDING,
 			job.ID,
 		)
+
+		rdb.RPush(ctx, "job_list", job.ID)
 
 		return nil, fmt.Errorf("fetch queue: %w", err)
 	}
@@ -243,7 +251,7 @@ func fetchBenchmarkJob(db sqlx.Queryer) (*xsuportal.BenchmarkJob, error) {
 	if len(ids) <= 0 {
 		return nil, nil
 	}
-	
+
 	var id int64 = 0
 	for _,i := range ids {
 		id ,_ = strconv.ParseInt(i, 10, 64)
