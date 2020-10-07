@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -45,7 +46,9 @@ const (
 )
 
 var db *sqlx.DB
+var rdb *redis.Client
 var notifier xsuportal.Notifier
+var ctx = context.Background()
 
 func main() {
 	srv := echo.New()
@@ -64,7 +67,7 @@ func main() {
 	db, _ = xsuportal.GetDB()
 	db.SetMaxOpenConns(50)
 	db.SetMaxIdleConns(50)
-
+	rdb = xsuportal.GetRDB()
 	srv.Use(middleware.Logger())
 	srv.Use(middleware.Recover())
 	srv.Use(session.Middleware(sessions.NewCookieStore([]byte("tagomoris"))))
@@ -470,7 +473,7 @@ func (*ContestantService) EnqueueBenchmarkJob(e echo.Context) error {
 		return fmt.Errorf("commit tx: %w", err)
 	}
 	j := makeBenchmarkJobPB(&job)
-
+	rdb.RPush(ctx, "job_list", j.Id)
 	return writeProto(e, http.StatusOK, &contestantpb.EnqueueBenchmarkJobResponse{
 		Job: j,
 	})

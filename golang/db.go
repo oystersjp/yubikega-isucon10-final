@@ -1,6 +1,8 @@
 package xsuportal
 
 import (
+	"github.com/go-redis/redis/v8"
+	_ "github.com/go-redis/redis/v8"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 
@@ -21,4 +23,12 @@ func GetDB() (*sqlx.DB, error) {
 	mysqlConfig.InterpolateParams = true
 
 	return sqlx.Open("mysql", mysqlConfig.FormatDSN())
+}
+
+func GetRDB () (*redis.Client) {
+	return redis.NewClient(&redis.Options{
+		Addr:     "isu1.t.isucon.dev:6379",
+		Password: "",
+		DB:       0,
+	})
 }

@@ -6,23 +6,27 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"log"
 	"net"
+	"strconv"
 	"time"
 
+	_ "github.com/go-redis/redis/v8"
+	xsuportal "github.com/isucon/isucon10-final/webapp/golang"
+	"github.com/isucon/isucon10-final/webapp/golang/proto/xsuportal/resources"
+	"github.com/isucon/isucon10-final/webapp/golang/proto/xsuportal/services/bench"
+	"github.com/isucon/isucon10-final/webapp/golang/util"
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	xsuportal "github.com/isucon/isucon10-final/webapp/golang"
-	"github.com/isucon/isucon10-final/webapp/golang/proto/xsuportal/resources"
-	"github.com/isucon/isucon10-final/webapp/golang/proto/xsuportal/services/bench"
-	"github.com/isucon/isucon10-final/webapp/golang/util"
 )
 
 var db *sqlx.DB
+var rdb *redis.Client
+var ctx = context.Background()
 
 type benchmarkQueueService struct {
 }
@@ -69,7 +73,7 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 			if rows, _ := r.RowsAffected(); rows == 0 {
 				continue
 			}
-
+			rdb.LPop(ctx, "job_list")
 			var contestStartsAt time.Time
 			err = db.Get(&contestStartsAt, "SELECT `contest_starts_at` FROM `contest_config` LIMIT 1")
 			if err != nil {
@@ -98,7 +102,7 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 
 		return nil, fmt.Errorf("fetch queue: %w", err)
 	}
-	time.Sleep(200 * time.Microsecond)
+
 	return &bench.ReceiveBenchmarkJobResponse{
 		JobHandle: jobHandle,
 	}, nil
@@ -235,12 +239,25 @@ func (b *benchmarkReportService) saveAsRunning(db sqlx.Execer, job *xsuportal.Be
 }
 
 func fetchBenchmarkJob(db sqlx.Queryer) (*xsuportal.BenchmarkJob, error) {
+	ids := rdb.LRange(ctx, "job_list", 0,1).Val()
+	if len(ids) <= 0 {
+		return nil, nil
+	}
+	
+	var id int64 = 0
+	for _,i := range ids {
+		id ,_ = strconv.ParseInt(i, 10, 64)
+	}
+    if id == 0 {
+		return nil, nil
+	}
 	var job xsuportal.BenchmarkJob
 	err := sqlx.Get(
 		db,
 		&job,
-		"SELECT * FROM `benchmark_jobs` WHERE `status` = ? ORDER BY `id` LIMIT 1",
+		"SELECT * FROM `benchmark_jobs` WHERE `status` = ? AND id = ?",
 		resources.BenchmarkJob_PENDING,
+		id,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -266,6 +283,7 @@ func main() {
 	db.SetMaxOpenConns(50)
 	db.SetMaxIdleConns(50)
 
+	rdb = xsuportal.GetRDB()
 	server := grpc.NewServer()
 
 	queue := &benchmarkQueueService{}
