@@ -77,14 +77,10 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 			var contestStartsAt time.Time
 			timeString := rdb.Get(ctx, "contest_starts_at")
 			if timeString != nil {
-				continue
+				return fmt.Errorf("get contest starts at: %w", err)
 			}
 			contestStartsAt, _ = time.Parse(timeString.Val(),"2014-12-31 12:31:24 JST")
 
-			err = db.Get(&contestStartsAt, "SELECT `contest_starts_at` FROM `contest_config` LIMIT 1")
-			if err != nil {
-				return fmt.Errorf("get contest starts at: %w", err)
-			}
 
 			jobHandle = &bench.ReceiveBenchmarkJobResponse_JobHandle{
 				JobId:            job.ID,
