@@ -48,7 +48,7 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 				return fmt.Errorf("poll benchmark job: %w", err)
 			}
 			if j == nil {
-				time.Sleep(200 * time.Microsecond)
+				time.Sleep(time.Millisecond * 50)
 				return nil
 			}
 			job = j
