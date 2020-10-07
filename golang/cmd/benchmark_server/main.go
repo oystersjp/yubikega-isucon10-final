@@ -98,7 +98,7 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 
 		return nil, fmt.Errorf("fetch queue: %w", err)
 	}
-
+	time.Sleep(200 * time.Microsecond)
 	return &bench.ReceiveBenchmarkJobResponse{
 		JobHandle: jobHandle,
 	}, nil
