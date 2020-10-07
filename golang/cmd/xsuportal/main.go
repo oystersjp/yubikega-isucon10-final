@@ -371,9 +371,9 @@ func (*AdminService) RespondClarification(e echo.Context) error {
 	}
 
 	updated := wasAnswered && wasDisclosed == clarification.Disclosed
-	if err := notifier.NotifyClarificationAnswered(db, &clarification, updated); err != nil {
-		return fmt.Errorf("notify clarification answered: %w", err)
-	}
+
+	go notifier.NotifyClarificationAnswered(db, &clarification, updated)
+
 	return writeProto(e, http.StatusOK, &adminpb.RespondClarificationResponse{
 		Clarification: c,
 	})
