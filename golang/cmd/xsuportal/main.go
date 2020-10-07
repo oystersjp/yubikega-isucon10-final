@@ -322,28 +322,23 @@ func (*AdminService) RespondClarification(e echo.Context) error {
 		return err
 	}
 
-	tx, err := db.Beginx()
-	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
-	}
-	defer tx.Rollback()
-
 	var clarificationBefore xsuportal.Clarification
-	err = tx.Get(
+	err = db.Get(
 		&clarificationBefore,
-		"SELECT * FROM `clarifications` WHERE `id` = ? LIMIT 1 FOR UPDATE",
+		"SELECT * FROM `clarifications` WHERE `id` = ? LIMIT 1",
 		id,
 	)
 	if err == sql.ErrNoRows {
 		return halt(e, http.StatusNotFound, "質問が見つかりません", nil)
 	}
+
 	if err != nil {
 		return fmt.Errorf("get clarification with lock: %w", err)
 	}
 	wasAnswered := clarificationBefore.AnsweredAt.Valid
 	wasDisclosed := clarificationBefore.Disclosed
 
-	_, err = tx.Exec(
+	_, err = db.Exec(
 		"UPDATE `clarifications` SET `disclosed` = ?, `answer` = ?, `updated_at` = NOW(6), `answered_at` = NOW(6) WHERE `id` = ? LIMIT 1",
 		req.Disclose,
 		req.Answer,
@@ -353,7 +348,7 @@ func (*AdminService) RespondClarification(e echo.Context) error {
 		return fmt.Errorf("update clarification: %w", err)
 	}
 	var clarification xsuportal.Clarification
-	err = tx.Get(
+	err = db.Get(
 		&clarification,
 		"SELECT * FROM `clarifications` WHERE `id` = ? LIMIT 1",
 		id,
@@ -362,7 +357,7 @@ func (*AdminService) RespondClarification(e echo.Context) error {
 		return fmt.Errorf("get clarification: %w", err)
 	}
 	var team xsuportal.Team
-	err = tx.Get(
+	err = db.Get(
 		&team,
 		"SELECT * FROM `teams` WHERE `id` = ? LIMIT 1",
 		clarification.TeamID,
@@ -374,9 +369,7 @@ func (*AdminService) RespondClarification(e echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("make clarification: %w", err)
 	}
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit tx: %w", err)
-	}
+
 	updated := wasAnswered && wasDisclosed == clarification.Disclosed
 	if err := notifier.NotifyClarificationAnswered(db, &clarification, updated); err != nil {
 		return fmt.Errorf("notify clarification answered: %w", err)
