@@ -188,9 +188,7 @@ func (*AdminService) Initialize(e echo.Context) error {
 			return fmt.Errorf("insert contest: %w", err)
 		}
 	}
-	var contestStartsAt time.Time
-	err = db.Get(&contestStartsAt, "SELECT `contest_starts_at` FROM `contest_config` LIMIT 1")
-	rdb.Set(ctx, "contest_starts_at", contestStartsAt, 70 * time.Second)
+
 	host := util.GetEnv("BENCHMARK_SERVER_HOST", "localhost")
 	port, _ := strconv.Atoi(util.GetEnv("BENCHMARK_SERVER_PORT", "50051"))
 	res := &adminpb.InitializeResponse{
