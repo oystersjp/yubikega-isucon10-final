@@ -129,8 +129,8 @@ func main() {
 	srv.Logger.Error(srv.StartServer(srv.Server))
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "10.160.15.101:6379", // use default Addr
-		Password: "",                   // no password set
+		Addr:     "isucon-app3:6379", // use default Addr
+		Password: "",                 // no password set
 	})
 
 	pong, err := rdb.Ping(ctx).Result()
