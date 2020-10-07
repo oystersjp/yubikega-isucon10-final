@@ -77,8 +77,8 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 			rdb.LPop(ctx, "job_list")
 			var contestStartsAt time.Time
 			timeString := rdb.Get(ctx, "contest_starts_at")
-			if timeString != nil {
-				return fmt.Errorf("get contest starts at: %w", err)
+			if timeString == nil {
+				return fmt.Errorf("get contest starts at")
 			}
 			contestStartsAt, _ = time.Parse(timeString.Val(),"2014-12-31 12:31:24 JST")
 
