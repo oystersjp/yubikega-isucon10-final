@@ -131,7 +131,7 @@ func main() {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "127.0.0.1:6379", // use default Addr
 		Password: "",               // no password set
-		DB:       db,               // use default DB
+		DB:       0,                // use default DB
 	})
 
 	pong, err := rdb.Ping(ctx).Result()
@@ -213,14 +213,6 @@ func (*AdminService) Initialize(e echo.Context) error {
 		},
 	}
 
-	rdb = redis.NewClient(&redis.Options{
-		Addr:         ":6379",
-		DialTimeout:  10 * time.Second,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		PoolSize:     10,
-		PoolTimeout:  30 * time.Second,
-	})
 	return writeProto(e, http.StatusOK, res)
 }
 
