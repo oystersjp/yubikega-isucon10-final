@@ -18,7 +18,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/go-sql-driver/mysql"
 	"github.com/golang/protobuf/proto"
-	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo-contrib/session"
