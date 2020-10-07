@@ -365,7 +365,7 @@ func (*AdminService) RespondClarification(e echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("get team: %w", err)
 	}
-	c, err := makeClarificationPB(tx, &clarification, &team)
+	c, err := makeClarificationPB(db, &clarification, &team)
 	if err != nil {
 		return fmt.Errorf("make clarification: %w", err)
 	}
