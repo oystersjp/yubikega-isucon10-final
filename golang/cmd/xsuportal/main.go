@@ -132,7 +132,7 @@ func main() {
 
 	_, err := rdb.Ping(ctx).Result()
 	if err = nil {
-		panic("(*>△<)＜ナーンナーンっっ")
+		panic("(*>△<)＜redisのpingに失敗")
 	}
 
 	srv.Logger.Error(srv.StartServer(srv.Server))
