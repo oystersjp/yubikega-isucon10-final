@@ -131,7 +131,7 @@ func main() {
 	})
 
 	_, err := rdb.Ping(ctx).Result()
-	if err = nil {
+	if err == nil {
 		panic("(*>△<)＜redisのpingに失敗")
 	}
 
