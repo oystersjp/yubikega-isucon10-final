@@ -1185,20 +1185,20 @@ func (*AudienceService) ListTeams(e echo.Context) error {
 }
 
 func (*AudienceService) Dashboard(e echo.Context) error {
-	audience_leaderboard_byte, err := rdb.Get(ctx, "audience_leaderboard").Result()
+	audienceLeaderboardByte, err := rdb.Get(ctx, "audience_leaderboard").Result()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("make leaderboard: %w", err)
 	}
 	if leaderboad != nil {
-		return e.Blob(http.StatusOK, "application/vnd.google.protobuf", audience_leaderboard_byte)
+		return e.Blob(http.StatusOK, "application/vnd.google.protobuf", audienceLeaderboardByte)
 	}
 	leaderboard, err := makeLeaderboardPB(e, 0)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("make leaderboard: %w", err)
 	}
-	audience_leaderboard_byte, _ := proto.Marshal(&audiencepb.DashboardResponse{Leaderboard: leaderboard})
-	err := rdb.Set(ctx, "audience_leaderboard", audience_leaderboard_byte, 1*time.Second).Err()
-	return e.Blob(http.StatusOK, "application/vnd.google.protobuf", audience_leaderboard_byte)
+	audienceLeaderboardByte, _ := proto.Marshal(&audiencepb.DashboardResponse{Leaderboard: leaderboard})
+	err := rdb.Set(ctx, "audience_leaderboard", audienceLeaderboardByte, 1*time.Second).Err()
+	return e.Blob(http.StatusOK, "application/vnd.google.protobuf", audienceLeaderboardByte)
 }
 
 type XsuportalContext struct {
