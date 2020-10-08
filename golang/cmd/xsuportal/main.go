@@ -1198,6 +1198,9 @@ func (*AudienceService) Dashboard(e echo.Context) error {
 	}
 	audienceLeaderboardByte, _ := proto.Marshal(&audiencepb.DashboardResponse{Leaderboard: leaderboard})
 	err := rdb.Set(ctx, "audience_leaderboard", audienceLeaderboardByte, 1*time.Second).Err()
+	if err != nil {
+		return fmt.Errorf("make leaderboard: %w", err)
+	}
 	return e.Blob(http.StatusOK, "application/vnd.google.protobuf", audienceLeaderboardByte)
 }
 
