@@ -125,7 +125,7 @@ func main() {
 	srv.POST("/api/login", contestant.Login)
 	srv.POST("/api/logout", contestant.Logout)
 
-	rdb := redis.NewClient(&redis.Options{
+	rdb = redis.NewClient(&redis.Options{
 		Addr:     "10.160.15.101:6379", // use default Addr
 		Password: "",                   // no password set
 	})
@@ -1185,24 +1185,20 @@ func (*AudienceService) ListTeams(e echo.Context) error {
 }
 
 func (*AudienceService) Dashboard(e echo.Context) error {
-	leaderboard, err := rdb.Get(ctx, "audience_leaderboard").Result()
+	audience_leaderboard_byte, err := rdb.Get(ctx, "audience_leaderboard").Result()
 	if err != nil {
 		panic(err)
 	}
-	if leaderboard == nil {
-		leaderboard, err := makeLeaderboardPB(e, 0)
-		err := rdb.Set(ctx, "audience_leaderboard", leaderboard, 1*time.Second).Err()
-		if err != nil {
-			panic(err)
-		}
+	if leaderboad != nil {
+		return e.Blob(http.StatusOK, "application/vnd.google.protobuf", audience_leaderboard_byte)
 	}
-
+	leaderboard, err := makeLeaderboardPB(e, 0)
 	if err != nil {
-		return fmt.Errorf("make leaderboard: %w", err)
+		panic(err)
 	}
-	return writeProto(e, http.StatusOK, &audiencepb.DashboardResponse{
-		Leaderboard: leaderboard,
-	})
+	audience_leaderboard_byte, _ := proto.Marshal(&audiencepb.DashboardResponse{Leaderboard: leaderboard})
+	err := rdb.Set(ctx, "audience_leaderboard", audience_leaderboard_byte, 1*time.Second).Err()
+	return e.Blob(http.StatusOK, "application/vnd.google.protobuf", audience_leaderboard_byte)
 }
 
 type XsuportalContext struct {
