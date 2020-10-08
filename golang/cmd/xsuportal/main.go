@@ -1185,17 +1185,16 @@ func (*AudienceService) ListTeams(e echo.Context) error {
 }
 
 func (*AudienceService) Dashboard(e echo.Context) error {
-	leaderboard, err := redis.String(ctx.Do("GET", audience_leaderboard))
+	leaderboard, err := rdb.Get(ctx, "audience_leaderboard").Result()
 	if err != nil {
 		panic(err)
 	}
 	if leaderboard == nil {
 		leaderboard, err := makeLeaderboardPB(e, 0)
-		leaderboard, err := redis.String(ctx.Do("SET", audience_leaderboard, leaderboard))
+		err := rdb.Set(ctx, "audience_leaderboard", leaderboard, 1*time.Second).Err()
 		if err != nil {
 			panic(err)
 		}
-		_, err = ctx.Do("SETEX", audience_leaderboard, 1, leaderboard)
 	}
 
 	if err != nil {
