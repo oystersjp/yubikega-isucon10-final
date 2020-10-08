@@ -20,6 +20,6 @@ start-services:
 	sudo systemctl start nginx
 
 truncate-logs:
-	ssh isucon-app3 sudo truncate --size 0 /var/log/mysql/mysql-slow.log
+	ssh isucon-app2 sudo truncate --size 0 /var/log/mysql/mysql-slow.log
 	sudo sudo truncate --size 0 /var/log/nginx/access.log
 
