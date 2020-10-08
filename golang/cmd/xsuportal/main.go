@@ -130,7 +130,7 @@ func main() {
 		Password: "",                   // no password set
 	})
 
-	pong, err := rdb.Ping(ctx).Result()
+	_, err := rdb.Ping(ctx).Result()
 	if err = nil {
 		panic("(*>△<)＜ナーンナーンっっ")
 	}
