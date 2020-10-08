@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/singleflight"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/go-sql-driver/mysql"
 	"github.com/golang/protobuf/proto"
@@ -44,6 +46,7 @@ const (
 	MYSQL_ER_DUP_ENTRY         = 1062
 	SessionName                = "xsucon_session"
 )
+var sfGroup singleflight.Group
 
 var (
 	ctx = context.Background()
@@ -613,13 +616,20 @@ func (*ContestantService) Dashboard(e echo.Context) error {
 		return wrapError("check session", err)
 	}
 	team, _ := getCurrentTeam(e, db, false)
-	leaderboard, err := makeLeaderboardPB(e, team.ID)
+	res, err, _ := sfGroup.Do(fmt.Sprintf("team_id: %d", team.ID), func() (interface{}, error) {
+		leaderboard, err := makeLeaderboardPB(e, team.ID)
+		if err != nil {
+			return nil, fmt.Errorf("make leaderboard: %w", err)
+		}
+		r := &contestantpb.DashboardResponse{Leaderboard: leaderboard}
+		return proto.Marshal(r)
+	})
+
 	if err != nil {
 		return fmt.Errorf("make leaderboard: %w", err)
 	}
-	return writeProto(e, http.StatusOK, &contestantpb.DashboardResponse{
-		Leaderboard: leaderboard,
-	})
+
+	return e.Blob(http.StatusOK, "application/vnd.google.protobuf", res.([]byte))
 }
 
 func (*ContestantService) ListNotifications(e echo.Context) error {
