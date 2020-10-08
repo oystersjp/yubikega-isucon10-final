@@ -206,6 +206,7 @@ func (n *Notifier)sendWebPush(db sqlx.Ext, notificationId string, notificationPB
 			Subscriber:      WebpushSubject,
 			VAPIDPublicKey:  options.VAPIDPrivateKey,
 			VAPIDPrivateKey: options.VAPIDPublicKey,
+			TTL:             30,
 		},
 	)
 	if err != nil {
