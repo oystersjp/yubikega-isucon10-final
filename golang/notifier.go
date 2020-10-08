@@ -32,7 +32,6 @@ func (n *Notifier) VAPIDKey() *webpush.Options {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	if n.options == nil {
-		fmt.Println("test: notificatiion")
 		pemBytes, err := ioutil.ReadFile(WebpushVAPIDPrivateKeyPath)
 		if err != nil {
 			return nil
