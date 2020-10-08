@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/go-sql-driver/mysql"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/sessions"
@@ -42,6 +43,11 @@ const (
 	DebugContestStatusFilePath = "/tmp/XSUPORTAL_CONTEST_STATUS"
 	MYSQL_ER_DUP_ENTRY         = 1062
 	SessionName                = "xsucon_session"
+)
+
+var (
+	ctx = context.Background()
+	rdb *redis.Client
 )
 
 var db *sqlx.DB
@@ -119,7 +125,18 @@ func main() {
 	srv.POST("/api/login", contestant.Login)
 	srv.POST("/api/logout", contestant.Logout)
 
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "10.160.15.101:6379", // use default Addr
+		Password: "",                   // no password set
+	})
+
+	_, err := rdb.Ping(ctx).Result()
+	if err != nil {
+		panic(err)
+	}
+
 	srv.Logger.Error(srv.StartServer(srv.Server))
+
 }
 
 type ProtoBinder struct{}
@@ -195,6 +212,7 @@ func (*AdminService) Initialize(e echo.Context) error {
 			Port: int64(port),
 		},
 	}
+
 	return writeProto(e, http.StatusOK, res)
 }
 
