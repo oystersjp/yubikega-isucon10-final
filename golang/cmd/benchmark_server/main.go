@@ -39,7 +39,7 @@ func (b *benchmarkQueueService) ReceiveBenchmarkJob(ctx context.Context, req *be
 
 	err := func() error {
 		for {
-			j, err := fetchBenchmarkJob(db)
+			j, err := fetchBenchmarkJob(db, req.TeamId)
 			if err != nil {
 				return fmt.Errorf("poll benchmark job: %w", err)
 			}
@@ -235,12 +235,13 @@ func (b *benchmarkReportService) saveAsRunning(db sqlx.Execer, job *xsuportal.Be
 	return nil
 }
 
-func fetchBenchmarkJob(db sqlx.Queryer) (*xsuportal.BenchmarkJob, error) {
+func fetchBenchmarkJob(db sqlx.Queryer, teamId int64) (*xsuportal.BenchmarkJob, error) {
 	var job xsuportal.BenchmarkJob
 	err := sqlx.Get(
 		db,
 		&job,
-		"SELECT * FROM `benchmark_jobs` WHERE `status` = ? ORDER BY `id` LIMIT 1",
+		"SELECT * FROM `benchmark_jobs` WHERE team_id = ? and `status` = ? ORDER BY `id` LIMIT 1",
+		teamId,
 		resources.BenchmarkJob_PENDING,
 	)
 	if err == sql.ErrNoRows {
