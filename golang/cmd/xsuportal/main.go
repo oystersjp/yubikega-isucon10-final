@@ -131,7 +131,9 @@ func main() {
 	})
 
 	pong, err := rdb.Ping(ctx).Result()
-	fmt.Println(pong, err)
+	if err = nil {
+		panic("(*>△<)＜ナーンナーンっっ")
+	}
 
 	srv.Logger.Error(srv.StartServer(srv.Server))
 
