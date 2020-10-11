@@ -16,7 +16,6 @@ server {
   server_name default_server;
 
   client_max_body_size 10m;
-  ssl on;
   ssl_certificate /etc/ssl/private/tls-cert.pem;
   ssl_certificate_key /etc/ssl/private/tls-key.pem;
 
@@ -28,6 +27,10 @@ server {
   proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
   proxy_http_version 1.1;
   proxy_set_header Connection "";
+
+  proxy_buffer_size 64k;
+  proxy_buffers 100 64k;
+  proxy_busy_buffers_size 64k;
 
   proxy_ignore_headers Cache-Control;
   proxy_cache zone1;
