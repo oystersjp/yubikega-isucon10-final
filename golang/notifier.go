@@ -3,6 +3,7 @@ package xsuportal
 import (
 	"crypto/elliptic"
 	"crypto/x509"
+	"database/sql"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
@@ -98,7 +99,7 @@ func (n *Notifier) NotifyClarificationAnswered(db sqlx.Ext, c *Clarification, up
 		if n.VAPIDKey() != nil {
 			notificationPB.Id = notification.ID
 			notificationPB.CreatedAt = timestamppb.New(notification.CreatedAt)
-			// TODO: Web Push IIKANJI NI SHITE
+			n.sendWebPush(db, contestant.ID ,notificationPB)
 		}
 	}
 	return nil
@@ -133,7 +134,7 @@ func (n *Notifier) NotifyBenchmarkJobFinished(db sqlx.Ext, job *BenchmarkJob) er
 		if n.VAPIDKey() != nil {
 			notificationPB.Id = notification.ID
 			notificationPB.CreatedAt = timestamppb.New(notification.CreatedAt)
-			// TODO: Web Push IIKANJI NI SHITE
+			n.sendWebPush(db, contestant.ID ,notificationPB)
 		}
 	}
 	return nil
@@ -165,6 +166,62 @@ func (n *Notifier) notify(db sqlx.Ext, notificationPB *resources.Notification, c
 		return nil, fmt.Errorf("get inserted notification: %w", err)
 	}
 	return &notification, nil
+}
+
+func (n *Notifier)sendWebPush(db sqlx.Ext, notificationId string, notificationPB *resources.Notification) error {
+
+	var pushSubscription PushSubscription
+	err := sqlx.Select(
+		db,
+		&pushSubscription,
+		"SELECT * FROM `push_subscriptions` WHERE `contestant_id` = ? LIMIT 1",
+		notificationId,
+	)
+	if err != nil {
+		return fmt.Errorf("select push subscriptions: %w", err)
+	}
+	if err == sql.ErrNoRows {
+		return nil
+	}
+
+	b, err := proto.Marshal(notificationPB)
+	if err != nil {
+		return fmt.Errorf("marshal notification: %w", err)
+	}
+	message := make([]byte, base64.StdEncoding.EncodedLen(len(b)))
+	base64.StdEncoding.Encode(message, b)
+
+	options := n.VAPIDKey()
+
+	resp, err := webpush.SendNotification(
+		message,
+		&webpush.Subscription{
+			Endpoint: pushSubscription.Endpoint,
+			Keys: webpush.Keys{
+				Auth:   pushSubscription.Auth,
+				P256dh: pushSubscription.P256DH,
+			},
+		},
+		&webpush.Options{
+			Subscriber:      WebpushSubject,
+			VAPIDPublicKey:  options.VAPIDPrivateKey,
+			VAPIDPrivateKey: options.VAPIDPublicKey,
+			TTL:             30,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("send notification: %w", err)
+	}
+	defer resp.Body.Close()
+	expired := resp.StatusCode == 410
+	if expired {
+		return fmt.Errorf("expired notification")
+	}
+	invalid := resp.StatusCode == 404
+	if invalid {
+		return fmt.Errorf("invalid notification")
+	}
+	return nil
 }
 
 
